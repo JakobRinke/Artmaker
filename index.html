@@ -1,0 +1,294 @@
+<html>
+
+    <head>
+
+        <title>
+            Das soll also Kunst sein?
+        </title>
+
+        <meta charset="utf-8">
+
+        <style>
+            * 
+            {
+                background: #aeaeae;
+                text-align: center;
+                color:#377e3a;
+                font-size: 30px;
+            }
+
+
+            input, button
+            {
+                -webkit-appearance: none; 
+                appearance: none;
+                width: 70%; 
+                height: 5%;
+                font-size: 130%;
+            }
+
+
+
+
+
+            /* The slider itself */
+            .slider {
+            -webkit-appearance: none;  /* Override default CSS styles */
+            appearance: none;
+            width: 70%; /* Full-width */
+            height: 25px; /* Specified height */
+            background: #d3d3d3; /* Grey background */
+            outline: none; /* Remove outline */
+            opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+            -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+            transition: opacity .2s;
+            }
+
+            /* Mouse-over effects */
+            .slider:hover {
+            opacity: 1; /* Fully shown on mouse-over */
+            }
+
+            /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+            .slider::-webkit-slider-thumb {
+            -webkit-appearance: none; /* Override default look */
+            appearance: none;
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: #4CAF50; /* Green background */
+            cursor: pointer; /* Cursor on hover */
+            }
+
+            .slider::-moz-range-thumb {
+            width: 25px; /* Set a specific slider handle width */
+            height: 25px; /* Slider handle height */
+            background: #4CAF50; /* Green background */
+            cursor: pointer; /* Cursor on hover */
+            }
+
+
+
+            
+
+
+
+        </style>
+
+    </head> 
+
+    <body>
+
+        <section id="mainsection">
+
+            <h1 style="font-size: 150%"> Kunst Generieren hier!!!!! </h1>
+
+
+            <br><br><br><br><br><br><br><br><br>
+
+
+            <h3> 1. Breite und Höhe des Bildes Angeben</h3>
+            <input type="text" placeholder="Breite" id="Breite"><br>
+            <input type="text" placeholder="Höhe" id="Höhe">
+            <br><br><br>
+            <h3> 2. Anzahl der Glättungen (achtung: je mehr desto CPU-Intensiver) </h3>
+            <input type="range" name="Smothings" id="Smothings" value="3" min="0" max="10" class="slider">
+            <br><br><br>
+            <h3> 3. Schwellenwert </h3>
+            <input type="range" name="Minpix" id="Minpix" value="5" min="0" max="8" class="slider">
+            <br><br><br>
+            <h3> 4. Anzahl Farben </h3>
+            <input type="range" name="Colors" id="Colors" value="2" min="2" max="10" class="slider">
+            <br><br><br>
+            <button value="Los" onclick="CreateArt()" style="width: 15%; height: 5%;">Los </button>
+
+
+            <br><br><br><br>
+            <canvas id="MainCanvas"> </canvas>
+
+
+            <script>
+                Canvas = document.getElementById("MainCanvas");
+                SmothingsEl = document.getElementById("Smothings");
+                MinpixEl = document.getElementById("Minpix");
+                ColorsEl = document.getElementById("Colors");
+                BreiteEl = document.getElementById("Breite");
+                HöheEl = document.getElementById("Höhe");
+                ctx = Canvas.getContext("2d");
+
+
+                function CreateArt ()
+                {
+                    var Smothings = parseInt(SmothingsEl.value) ;
+                    var ColorCount = parseInt(ColorsEl.value) ;
+                    var Minpix = parseInt(MinpixEl.value) ;
+                    var Breite = parseInt(BreiteEl.value) * 2;
+                    var Höhe = parseInt(HöheEl.value) * 2;
+                    
+                    if (Höhe == undefined || Breite==undefined || Höhe==null || Breite==null||  Number.isNaN(Höhe) ||  Number.isNaN(Breite) )
+                    {
+                        return;
+                    }
+
+
+                    var Colors = []
+                    for (var i = 0; i != ColorCount; i++) 
+                    {
+                        Colors.push(getRandomColor())
+                    }
+
+                    Canvas.width = Breite;
+                    Canvas.height = Höhe;
+                    
+                    
+                    var PixelMap = CreateMap(Breite, Höhe, Colors)
+
+                    for (var i = 0; i != Smothings; i++) 
+                    {
+                        console.log("Warten...")
+                        PixelMap = SmoothMap(PixelMap, Minpix, Colors)
+                    }
+                    
+                    draw(PixelMap)
+
+                  
+
+                }
+
+            
+                function CreateMap(Breite, Höhe, Colors)
+                {
+                    var PixelMap = []
+
+                    for (var i = 0; i != Höhe + 2; i++) 
+                    {
+                        PixelMap.push([])
+                        for (var j = 0; j != Breite + 2; j++) 
+                        {                   
+                            PixelMap[i].push(PickRandom(Colors))
+                        }
+                    }
+                    return PixelMap
+                    
+
+                }
+
+
+
+
+                function getRandomColor() 
+                {
+                    var letters = '456789ABCDEF';
+                    var color = '#';
+                    for (var i = 0; i < 6; i++) 
+                    {
+                        color += PickRandom(letters);
+                    }
+                    return color;
+                }
+
+
+
+
+
+                function PickRandom(List)
+                {
+                    return List[Math.floor(Math.random() * List.length)];
+                }
+
+
+
+
+
+
+                function SmoothMap(PixelMap, Minpix, Colors)
+                {
+
+                    for (var i = 1; i != PixelMap.length - 1; i++) 
+                    {
+                        for (var j = 1; j != PixelMap[0].length - 1; j++) 
+                        {                 
+                            var ColorCounter = [];
+                            for(var a = 0; a!=Colors.length; a++)
+                            {
+                                ColorCounter.push(0);
+                            }
+
+                            
+                            for (var k = -1; k !=  2; k++) 
+                            {
+                                for (var l = -1; l !=  2; l++) 
+                                {
+                                    if (!(l == 0 && k == 0))
+                                    {
+                                        ColorCounter[Colors.indexOf(PixelMap[i+k][j+l])] += 1;
+                                    }
+                                }
+
+                            }
+
+
+                            var result = {};
+                            
+                            ColorCounter.forEach((key, i) => result[key] = Colors[i]);
+                            
+                           
+                            ColorCounter.sort(function(first, second) {
+                                return second[1] - first[1];
+                            });
+
+                            try 
+                            {                   
+                                const OutKey = ColorCounter[0]                  
+                                if (OutKey > Minpix)
+                                {
+                                    PixelMap[i][j] = result[OutKey];
+                                   
+                                }
+
+                            }
+                            catch (Ex)
+                            {
+                                console.log(Ex)
+                            }
+                            
+
+
+
+                        }
+
+                  
+
+                    }
+                    return PixelMap
+                }
+
+
+
+                function draw(PixelMap)
+                {
+                    for (var i = 1; i != PixelMap.length - 1; i++) 
+                    {
+                        for (var j = 1; j != PixelMap[0].length - 1; j++) 
+                        {
+                            ctx.fillStyle = PixelMap[i][j];
+                            ctx.fillRect(i*3, j*3, 3, 3);
+                        }
+                    }
+                }
+
+
+
+
+            </script>
+
+
+        </section>
+
+
+
+
+    </body>
+
+
+
+</html>
